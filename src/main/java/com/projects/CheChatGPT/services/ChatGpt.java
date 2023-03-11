@@ -3,18 +3,32 @@ package com.projects.CheChatGPT.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.projects.CheChatGPT.dto.ChatGPTResponseDto;
+import com.projects.beans.Portal;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
+
+@Component
 public class ChatGpt {
+
     private static final URI CHAT_GPT_URI = URI.create("https://api.openai.com/v1/completions");
 
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private final Portal portal;
 
-    public static String send(String textToSend) {
+    public ChatGpt(Portal portal){
+        this.portal = portal;
+    }
+
+    private static final String[] HEADERS;
+
+    static {
+        HEADERS = new String[]
+                {"Content-Type", "application/json","Authorization",
+                        "Bearer YOUR_API_KEY"} ;
+    }
+
+    public String send(String textToSend) {
 
         try {
 
@@ -25,17 +39,10 @@ public class ChatGpt {
             jsonBody.put("model", "text-davinci-003");
             jsonBody.put("n", 1);
             jsonBody.put("max_tokens", 500);
-            jsonBody.put("stop", ".");
 
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(CHAT_GPT_URI)
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer YOUR-API_KEY")
-                    .POST(HttpRequest.BodyPublishers.ofString(String.valueOf(jsonBody)));
+            String response = portal.post(CHAT_GPT_URI, HEADERS, jsonBody);
 
-            HttpResponse<String> response = HTTP_CLIENT.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
-
-            ChatGPTResponseDto chatGPTResponseDto = mapper.readValue(response.body(), ChatGPTResponseDto.class);
+            ChatGPTResponseDto chatGPTResponseDto = mapper.readValue(response, ChatGPTResponseDto.class);
 
             return chatGPTResponseDto.getChatGPTTextResponse();
 
