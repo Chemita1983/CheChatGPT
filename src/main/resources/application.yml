@@ -1,0 +1,5 @@
+portal:
+  timeout: 5
+  http_version: HTTP_2
+  priority: 1
+  redirect: NEVER
